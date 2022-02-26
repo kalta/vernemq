@@ -64,14 +64,19 @@ init(Req, Opts) ->
                     mqttwss ->
                         case proplists:get_value(use_identity_as_username, Opts, false) of
                             false ->
-                                FsmMod:init(Peer, Opts);
+                                % If no use_identity_as_username, activate ws_pre_auth plugin
+                                {Peer2, Opts2} = ws_pre_auth(Req, Peer, Opts),
+                                FsmMod:init(Peer2, Opts2);
                             true ->
                                 Cert = cowboy_req:cert(Req),
                                 FsmMod:init(Peer, [{preauth, vmq_ssl:cert_to_common_name(Cert)}|Opts])
                         end;
                     _ -> %mqttws
                         case proplists:get_value(proxy_protocol_use_cn_as_username, Opts, true) of
-                            false -> FsmMod:init(Peer, Opts);
+                            false ->
+                                % If no proxy_protocol_use_cn_as_username, activate ws_pre_auth plugin
+								{Peer2, Opts2} = ws_pre_auth(Req, Peer, Opts),
+                                FsmMod:init(Peer2, Opts2);
                             true    -> case ProxyInfo0 of
                                             error -> FsmMod:init(Peer, Opts);
                                                     % Note: as 'proxy_protocol_use_cn_as_username' historically
@@ -214,3 +219,37 @@ select_protocol([Want|Rest], Have) ->
 
 add_socket(Socket, State) ->
     State#state{socket = Socket}.
+% Call plugin 'ws_pre_auth' with Peer ({ip_addr(), pos_integer()})and ws headers [{binary(), binary()}]
+ws_pre_auth(Req, Peer, Opts) ->
+    Headers = cowboy_req:headers(Req),
+    case vmq_plugin:all_till_ok(ws_pre_auth, [Peer, Headers]) of
+        ok ->
+            % Plugin does nothing
+            {Peer, Opts};
+
+        {ok, Username} when is_binary(Username) ->
+            % If plugin returns {ok, binary()}, we set this as username
+            {Peer, [{preauth, Username}|Opts]};
+
+        {ok, Opts} when is_map(Opts) ->
+            % If plugin returns {ok, map()}, we can set in it severl options:
+            % - username
+            % - peer
+            Peer2 = maps:get(peer, Opts, Peer),
+            Opts2 = case maps:get(username, Opts, none) of
+                Username when is_binary(Username) -> [{preauth, Username}|Opts];
+                _ -> Opts
+            end,
+            {Peer2, Opts2};
+
+        {ok, Other} ->
+            error_logger:error_msg("invalid response from ws_pre_auth plugin: ~p\n", [Other]),
+            {Peer, Opts};
+
+        {error, no_matching_hook_found} ->
+            {Peer, Opts};
+
+        {error, Error} ->
+            error_logger:error_msg("error response from ws_pre_auth plugin: ~p\n", [Error]),
+            {Peer, Opts}
+    end.
