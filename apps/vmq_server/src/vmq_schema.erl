@@ -171,6 +171,22 @@ translate_listeners(Conf) ->
     {HTTP_SSLIPs, HTTP_SSLRequireCerts} = lists:unzip(extract("listener.https", "require_certificate", BoolVal, Conf)),
     {HTTP_SSLIPs, HTTP_SSLVersions} = lists:unzip(extract("listener.https", "tls_version", AtomVal, Conf)),
 
+
+
+%%    {WSIPs, WSUserFromHeader} = lists:unzip(extract("listener.ws", "username_from_header", BoolVal, Conf)),
+%%    {WSIPs, WSUserFromHeaderName} = lists:unzip(extract("listener.ws", "username_from_header_name", StrVal, Conf)),
+%%    {WSIPs, WSUserFromHeaderRe} = lists:unzip(extract("listener.ws", "username_from_header_re", StrVal, Conf)),
+%%    {WS_SSLIPs, WSSUserFromHeader} = lists:unzip(extract("listener.ws", "username_from_header", BoolVal, Conf)),
+%%    {WS_SSLIPs, WSSUserFromHeaderName} = lists:unzip(extract("listener.ws", "username_from_header_name", StrVal, Conf)),
+%%    {WS_SSLIPs, WSSUserFromHeaderRe} = lists:unzip(extract("listener.ws", "username_from_header_re", StrVal, Conf)),
+
+
+
+
+
+
+
+
     TCP = lists:zip(TCPIPs, MZip([TCPMaxConns,
                                   TCPNrOfAcceptors,
                                   TCPMountPoint,
@@ -182,7 +198,12 @@ translate_listeners(Conf) ->
                                 WSNrOfAcceptors,
                                 WSMountPoint,
                                 WSProxyProto,
-                                WSAllowedProto])),
+                                WSAllowedProto
+%%                                WSUserFromHeader,
+%%                                WSUserFromHeaderName,
+%%                                WSUserFromHeaderRe
+
+        ])),
     VMQ = lists:zip(VMQIPs, MZip([VMQMaxConns,
                                   VMQNrOfAcceptors,
                                   VMQMountPoint,
@@ -226,7 +247,11 @@ translate_listeners(Conf) ->
                                      WS_SSLRequireCerts,
                                      WS_SSLVersions,
                                      WS_SSLUseIdents,
-                                     WS_SSLAllowedProto])),
+                                     WS_SSLAllowedProto
+%%                                     WSSUserFromHeader,
+%%                                     WSSUserFromHeaderName,
+%%                                     WSSUserFromHeaderRe
+                                     ])),
     VMQS = lists:zip(VMQ_SSLIPs, MZip([VMQ_SSLMaxConns,
                                        VMQ_SSLNrOfAcceptors,
                                        VMQ_SSLMountPoint,

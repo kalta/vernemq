@@ -1,6 +1,25 @@
 %% -*- mode: erlang -*-
 %% ex: ft=erlang
 
+
+{mapping, "listener.ws.username_from_header", "vmq_server.listeners", [
+                                                               {default, off},
+                                                               {datatype, flag}
+                                                              ]}.
+
+{mapping, "listener.ws.username_from_header_name", "vmq_server.listeners", [
+                                                               {default, ""},
+                                                               {datatype, string}
+                                                              ]}.
+
+{mapping, "listener.ws.username_from_header_re", "vmq_server.listeners", [
+                                                               {default, ""},
+                                                               {datatype, string}
+                                                              ]}.
+
+
+
+
 %% @doc Allow anonymous users to connect, default is 'off'. !!NOTE!!
 %% Enabling this completely disables authentication of the clients and
 %% should only be used for testing/development purposes or in case

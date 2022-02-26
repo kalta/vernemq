@@ -290,6 +290,19 @@ default_session_opts(Opts) ->
             false -> MaybeSSLDefaults;
             {_, V1} -> [{proxy_protocol_use_cn_as_username, V1}|MaybeSSLDefaults]
         end,
+%%    MaybeHeader1 = case lists:keyfind(username_from_header, 1, Opts) of
+%%        false -> MaybeProxyDefaults;
+%%        {_, H1} -> [{username_from_header, H1}|MaybeProxyDefaults]
+%%    end,
+%%    MaybeHeader2 = case lists:keyfind(username_from_header_name, 1, Opts) of
+%%        false -> MaybeHeader1;
+%%        {_, H2} -> [{username_from_header_name, H2}|MaybeHeader1]
+%%    end,
+%%
+%%    MaybeHeader3 = case lists:keyfind(username_from_header_re, 1, Opts) of
+%%        false -> MaybeHeader2;
+%%        {_, H3} -> [{username_from_header_name_re, H3}|MaybeHeader2]
+%%    end,
     AllowedProtocolVersions = proplists:get_value(allowed_protocol_versions, Opts, [3,4]),
     AllowAnonymousOverride = proplists:get_value(allow_anonymous_override, Opts, false),
     BufferSizes = proplists:get_value(buffer_sizes, Opts, undefined),
