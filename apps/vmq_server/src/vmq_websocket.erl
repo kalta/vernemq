@@ -27,7 +27,6 @@
          terminate/3]).
 
 -export([add_socket/2]).
--export([test/0]).
 
 -record(state, {
                 buffer= <<>>,
