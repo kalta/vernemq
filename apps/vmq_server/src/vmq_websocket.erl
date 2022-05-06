@@ -27,6 +27,7 @@
          terminate/3]).
 
 -export([add_socket/2]).
+-export([test/0]).
 
 -record(state, {
                 buffer= <<>>,
@@ -41,6 +42,7 @@
 
 -define(TO_SESSION, to_session_fsm).
 -define(SUPPORTED_PROTOCOLS, [<<"mqttv3.1">>, <<"mqtt">>]).
+
 
 init(Req, Opts) ->
     Type = proplists:get_value(type, Opts),
@@ -77,8 +79,11 @@ init(Req, Opts) ->
                                 % If no proxy_protocol_use_cn_as_username, activate ws_pre_auth plugin
 								{Peer2, Opts2} = ws_pre_auth(Req, Peer, Opts),
                                 FsmMod:init(Peer2, Opts2);
-                            true    -> case ProxyInfo0 of
-                                            error -> FsmMod:init(Peer, Opts);
+                            true    ->
+                            case ProxyInfo0 of
+                                            error -> 
+                                            {Peer2, Opts2} = ws_pre_auth(Req, Peer, Opts),
+                                            FsmMod:init(Peer2, Opts2);
                                                     % Note: as 'proxy_protocol_use_cn_as_username' historically
                                                     % defaults to 'true', we do not return an error here but fall 
                                                     % back to the provided MQTT username.
@@ -222,6 +227,7 @@ add_socket(Socket, State) ->
 % Call plugin 'ws_pre_auth' with Peer ({ip_addr(), pos_integer()})and ws headers [{binary(), binary()}]
 ws_pre_auth(Req, Peer, Opts) ->
     Headers = cowboy_req:headers(Req),
+    
     case vmq_plugin:all_till_ok(ws_pre_auth, [Peer, Headers]) of
         ok ->
             % Plugin does nothing
@@ -231,12 +237,12 @@ ws_pre_auth(Req, Peer, Opts) ->
             % If plugin returns {ok, binary()}, we set this as username
             {Peer, [{preauth, Username}|Opts]};
 
-        {ok, Opts} when is_map(Opts) ->
+        {ok, Map} when is_map(Map) ->
             % If plugin returns {ok, map()}, we can set in it severl options:
             % - username
             % - peer
-            Peer2 = maps:get(peer, Opts, Peer),
-            Opts2 = case maps:get(username, Opts, none) of
+            Peer2 = maps:get(peer, Map, Peer),
+            Opts2 = case maps:get(username, Map, none) of
                 Username when is_binary(Username) -> [{preauth, Username}|Opts];
                 _ -> Opts
             end,
